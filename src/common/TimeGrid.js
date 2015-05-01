@@ -7,6 +7,8 @@ var TimeGrid = Grid.extend({
 	slotDuration: null, // duration of a "slot", a distinct time segment on given day, visualized by lines
 	snapDuration: null, // granularity of time for dragging and selecting
 
+	timeSlots: null, // an array of different slot sizes
+
 	minTime: null, // Duration object that denotes the first visible time of any given day
 	maxTime: null, // Duration object that denotes the exclusive visible end time of any given day
 
@@ -71,14 +73,29 @@ var TimeGrid = Grid.extend({
 		var view = this.view;
 		var isRTL = this.isRTL;
 		var html = '';
-		var slotNormal = this.slotDuration.asMinutes() % 15 === 0;
-		var slotTime = moment.duration(+this.minTime); // wish there was .clone() for durations
+		var slotNormal;
+		var slotTime;
 		var slotDate; // will be on the view's first day, but we only care about its time
 		var minutes;
 		var axisHtml;
 
+		
+
+		slotNormal = this.slotDuration.asMinutes() % 15 === 0;
+		slotTime = moment.duration(+this.minTime); // wish there was .clone() for durations
+
+		
+
 		// Calculate the time for each slot
 		while (slotTime < this.maxTime) {
+				if(this.timeSlots) {
+					this.slotDuration = moment.duration(this.timeSlots[this.timeSlotIndex], 'minutes');
+					this.timeSlotIndex++;
+				if (this.timeSlotIndex >= this.timeSlots.length) {
+					break;
+				};
+			}
+
 			slotDate = this.start.clone().time(slotTime); // will be in UTC but that's good. to avoid DST issues
 			minutes = slotDate.minutes();
 
@@ -99,8 +116,7 @@ var TimeGrid = Grid.extend({
 					(isRTL ? axisHtml : '') +
 				"</tr>";
 
-			// slotTime.add(this.slotDuration);
-			slotTime.add(moment.duration(42, 'minutes'));
+				slotTime.add(this.slotDuration);
 		}
 
 		return html;
@@ -116,6 +132,10 @@ var TimeGrid = Grid.extend({
 		var view = this.view;
 		var slotDuration = view.opt('slotDuration');
 		var snapDuration = view.opt('snapDuration');
+
+		var timeSlots = view.opt('timeSlots');
+		this.timeSlots = timeSlots;
+		this.timeSlotIndex = 0;
 
 		slotDuration = moment.duration(slotDuration);
 		snapDuration = snapDuration ? moment.duration(snapDuration) : slotDuration;
