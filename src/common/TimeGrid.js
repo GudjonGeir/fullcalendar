@@ -99,7 +99,8 @@ var TimeGrid = Grid.extend({
 					(isRTL ? axisHtml : '') +
 				"</tr>";
 
-			slotTime.add(this.slotDuration);
+			// slotTime.add(this.slotDuration);
+			slotTime.add(moment.duration(42, 'minutes'));
 		}
 
 		return html;
