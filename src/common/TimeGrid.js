@@ -78,6 +78,7 @@ var TimeGrid = Grid.extend({
 		var slotDate; // will be on the view's first day, but we only care about its time
 		var minutes;
 		var axisHtml;
+		var displayTime;
 
 		
 
@@ -88,20 +89,35 @@ var TimeGrid = Grid.extend({
 
 		// Calculate the time for each slot
 		while (slotTime < this.maxTime) {
-				if(this.timeSlots) {
-					this.slotDuration = moment.duration(this.timeSlots[this.timeSlotIndex], 'minutes');
-					this.timeSlotIndex++;
-				if (this.timeSlotIndex >= this.timeSlots.length) {
-					break;
-				};
-			}
-
 			slotDate = this.start.clone().time(slotTime); // will be in UTC but that's good. to avoid DST issues
 			minutes = slotDate.minutes();
 
+			if(this.timeSlots) {
+				this.slotDuration = moment.duration(this.timeSlots[this.timeSlotIndex], 'minutes');
+				
+
+				if (this.timeSlots[this.timeSlotIndex] > 24) {
+					displayTime = true;
+				} else {
+					displayTime = false;
+				}
+
+				if (this.timeSlotIndex >= this.timeSlots.length) {
+					break;
+				}
+
+				this.timeSlotIndex++;
+			} else {
+				if (!slotNormal || !minutes) {
+					displayTime = true;
+				} else {
+					displayTime = false;
+				}
+			}
+
 			axisHtml =
-				'<td class="fc-axis fc-time ' + view.widgetContentClass + '" ' + view.axisStyleAttr() + '>' +
-					((!slotNormal || !minutes) ? // if irregular slot duration, or on the hour, then display the time
+				'<td style="height:' + this.timeSlots[this.timeSlotIndex-1] + 'px;" class="fc-axis fc-time ' + view.widgetContentClass + '" ' + view.axisStyleAttr() + '>' +
+					((displayTime) ? // if irregular slot duration, or on the hour, then display the time
 						'<span>' + // for matchCellWidths
 							htmlEscape(slotDate.format(this.axisFormat)) +
 						'</span>' :
@@ -110,9 +126,9 @@ var TimeGrid = Grid.extend({
 				'</td>';
 
 			html +=
-				'<tr ' + (!minutes ? '' : 'class="fc-minor"') + '>' +
+				'<tr' + (!minutes ? '' : 'class="fc-minor"') + '>' +
 					(!isRTL ? axisHtml : '') +
-					'<td class="' + view.widgetContentClass + '"/>' +
+					'<td style="height:' + this.timeSlots[this.timeSlotIndex-1] + 'px;" class="' + view.widgetContentClass + ' blas"/>' +
 					(isRTL ? axisHtml : '') +
 				"</tr>";
 

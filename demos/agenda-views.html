@@ -17,11 +17,13 @@
 				center: 'title',
 				right: 'month,agendaWeek,agendaDay'
 			},
+			defaultView: 'agendaWeek',
 			defaultDate: '2015-02-12',
 			minTime: '08:30:00',
-			axisFormat: 'H(:mm)',
+			axisFormat: 'H:mm{ - H:mm}',
 			editable: true,
 			slotDuration: '00:25:00',
+			allDaySlot: false,
 			timeSlots: [45, 5, 45, 15, 45, 5, 45, 25, 45, 5, 45, 5, 45, 10, 45, 5, 45, 5, 45, 5, 45, 5, 45, 5, 45, 45, 5, 45],
 			eventLimit: true, // allow "more" link when too many events
 			events: [
@@ -51,8 +53,8 @@
 				},
 				{
 					title: 'Meeting',
-					start: '2015-02-12T10:30:00',
-					end: '2015-02-12T12:30:00'
+					start: '2015-02-12T08:30:00',
+					end: '2015-02-12T09:15:00'
 				},
 				{
 					title: 'Lunch',
