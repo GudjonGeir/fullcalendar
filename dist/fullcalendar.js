@@ -5706,6 +5706,7 @@ var TimeGrid = Grid.extend({
 		var minutes;
 		var axisHtml;
 		var displayTime;
+		var slotDate2;
 
 		
 
@@ -5718,6 +5719,7 @@ var TimeGrid = Grid.extend({
 		while (slotTime < this.maxTime) {
 			slotDate = this.start.clone().time(slotTime); // will be in UTC but that's good. to avoid DST issues
 			minutes = slotDate.minutes();
+			slotDate2 = this.start.clone().time(slotTime + this.slotDuration);
 
 			if(this.timeSlots) {
 				this.slotDuration = moment.duration(this.timeSlots[this.timeSlotIndex], 'minutes');
@@ -5743,10 +5745,11 @@ var TimeGrid = Grid.extend({
 			}
 
 			axisHtml =
-				'<td class="fc-axis fc-time ' + view.widgetContentClass + '" ' + view.axisStyleAttr() + '>' +
+				'<td style="height:' + this.timeSlots[this.timeSlotIndex-1] + 'px;" class="fc-axis fc-time ' + view.widgetContentClass + '" ' + view.axisStyleAttr() + '>' +
 					((displayTime) ? // if irregular slot duration, or on the hour, then display the time
 						'<span>' + // for matchCellWidths
 							htmlEscape(slotDate.format(this.axisFormat)) +
+							' - ' + htmlEscape(slotDate2.format(this.axisFormat)) +
 						'</span>' :
 						''
 						) +
@@ -5755,7 +5758,7 @@ var TimeGrid = Grid.extend({
 			html +=
 				'<tr' + (!minutes ? '' : 'class="fc-minor"') + '>' +
 					(!isRTL ? axisHtml : '') +
-					'<td class="' + view.widgetContentClass + ' blas"/>' +
+					'<td style="height:' + this.timeSlots[this.timeSlotIndex-1] + 'px;" class="' + view.widgetContentClass + ' blas"/>' +
 					(isRTL ? axisHtml : '') +
 				"</tr>";
 
