@@ -5699,6 +5699,7 @@ var TimeGrid = Grid.extend({
 	slatRowHtml: function() {
 		var view = this.view;
 		var isRTL = this.isRTL;
+		var seeSlotDuration = this.seeSlotDuration;
 		var html = '';
 		var slotNormal;
 		var slotTime;
@@ -5706,24 +5707,17 @@ var TimeGrid = Grid.extend({
 		var minutes;
 		var axisHtml;
 		var displayTime;
-		var slotDate2;
+		var slotEndDate;
 
 		
 
 		slotNormal = this.slotDuration.asMinutes() % 15 === 0;
 		slotTime = moment.duration(+this.minTime); // wish there was .clone() for durations
 
-		
-
 		// Calculate the time for each slot
 		while (slotTime < this.maxTime) {
-			slotDate = this.start.clone().time(slotTime); // will be in UTC but that's good. to avoid DST issues
-			minutes = slotDate.minutes();
-			slotDate2 = this.start.clone().time(slotTime + this.slotDuration);
-
 			if(this.timeSlots) {
 				this.slotDuration = moment.duration(this.timeSlots[this.timeSlotIndex], 'minutes');
-				
 
 				if (this.timeSlots[this.timeSlotIndex] > 24) {
 					displayTime = true;
@@ -5743,18 +5737,33 @@ var TimeGrid = Grid.extend({
 					displayTime = false;
 				}
 			}
+			slotDate = this.start.clone().time(slotTime); // will be in UTC but that's good. to avoid DST issues
+			minutes = slotDate.minutes();
+			slotEndDate = this.start.clone().time(slotTime + this.slotDuration);
 
-			axisHtml =
-				'<td style="height:' + this.timeSlots[this.timeSlotIndex-1] + 'px;" class="fc-axis fc-time ' + view.widgetContentClass + '" ' + view.axisStyleAttr() + '>' +
-					((displayTime) ? // if irregular slot duration, or on the hour, then display the time
-						'<span>' + // for matchCellWidths
-							htmlEscape(slotDate.format(this.axisFormat)) +
-							' - ' + htmlEscape(slotDate2.format(this.axisFormat)) +
-						'</span>' :
-						''
-						) +
-				'</td>';
-
+			if (seeSlotDuration) {
+				axisHtml =
+					'<td style="height:' + this.timeSlots[this.timeSlotIndex-1] + 'px;" class="fc-axis fc-time ' + view.widgetContentClass + '" ' + view.axisStyleAttr() + '>' +
+						((displayTime) ? // if irregular slot duration, or on the hour, then display the time
+							'<span>' + // for matchCellWidths
+								htmlEscape(slotDate.format(this.axisFormat)) +
+								' - ' + htmlEscape(slotEndDate.format(this.axisFormat)) +
+							'</span>' :
+							''
+							) +
+					'</td>';
+			}
+			else {
+				axisHtml =
+					'<td style="height:' + this.timeSlots[this.timeSlotIndex-1] + 'px;" class="fc-axis fc-time ' + view.widgetContentClass + '" ' + view.axisStyleAttr() + '>' +
+						((displayTime) ? // if irregular slot duration, or on the hour, then display the time
+							'<span>' + // for matchCellWidths
+								htmlEscape(slotDate.format(this.axisFormat)) +
+							'</span>' :
+							''
+							) +
+					'</td>';
+			}
 			html +=
 				'<tr' + (!minutes ? '' : 'class="fc-minor"') + '>' +
 					(!isRTL ? axisHtml : '') +
@@ -5782,6 +5791,9 @@ var TimeGrid = Grid.extend({
 		var timeSlots = view.opt('timeSlots');
 		this.timeSlots = timeSlots;
 		this.timeSlotIndex = 0;
+
+		var seeSlotDuration = view.opt('seeSlotDuration');
+		this.seeSlotDuration = seeSlotDuration;
 
 		slotDuration = moment.duration(slotDuration);
 		snapDuration = snapDuration ? moment.duration(snapDuration) : slotDuration;
@@ -6613,6 +6625,7 @@ var View = fc.View = Class.extend({
 	intervalUnit: null, // name of largest unit being displayed, like "month" or "week"
 
 	isSelected: false, // boolean whether a range of time is user-selected or not
+	seeSlotDuration: false, // boolean whether a slot should display start and end time 
 
 	// subclasses can optionally use a scroll container
 	scrollerEl: null, // the element that will most likely scroll when content is too tall

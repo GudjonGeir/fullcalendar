@@ -29,6 +29,7 @@ var View = fc.View = Class.extend({
 	intervalUnit: null, // name of largest unit being displayed, like "month" or "week"
 
 	isSelected: false, // boolean whether a range of time is user-selected or not
+	seeSlotDuration: false, // boolean whether a slot should display start and end time 
 
 	// subclasses can optionally use a scroll container
 	scrollerEl: null, // the element that will most likely scroll when content is too tall
