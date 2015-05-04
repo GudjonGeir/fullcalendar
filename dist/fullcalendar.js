@@ -5634,6 +5634,8 @@ var TimeGrid = Grid.extend({
 	slotDuration: null, // duration of a "slot", a distinct time segment on given day, visualized by lines
 	snapDuration: null, // granularity of time for dragging and selecting
 
+	timeSlots: null, // an array of different slot sizes
+
 	minTime: null, // Duration object that denotes the first visible time of any given day
 	maxTime: null, // Duration object that denotes the exclusive visible end time of any given day
 
@@ -5697,36 +5699,79 @@ var TimeGrid = Grid.extend({
 	slatRowHtml: function() {
 		var view = this.view;
 		var isRTL = this.isRTL;
+		var seeSlotDuration = this.seeSlotDuration;
 		var html = '';
-		var slotNormal = this.slotDuration.asMinutes() % 15 === 0;
-		var slotTime = moment.duration(+this.minTime); // wish there was .clone() for durations
+		var slotNormal;
+		var slotTime;
 		var slotDate; // will be on the view's first day, but we only care about its time
 		var minutes;
 		var axisHtml;
+		var displayTime;
+		var slotEndDate;
+
+		
+
+		slotNormal = this.slotDuration.asMinutes() % 15 === 0;
+		slotTime = moment.duration(+this.minTime); // wish there was .clone() for durations
 
 		// Calculate the time for each slot
 		while (slotTime < this.maxTime) {
+			if(this.timeSlots) {
+				this.slotDuration = moment.duration(this.timeSlots[this.timeSlotIndex], 'minutes');
+
+				if (this.timeSlots[this.timeSlotIndex] > 24) {
+					displayTime = true;
+				} else {
+					displayTime = false;
+				}
+
+				if (this.timeSlotIndex >= this.timeSlots.length) {
+					break;
+				}
+
+				this.timeSlotIndex++;
+			} else {
+				if (!slotNormal || !minutes) {
+					displayTime = true;
+				} else {
+					displayTime = false;
+				}
+			}
 			slotDate = this.start.clone().time(slotTime); // will be in UTC but that's good. to avoid DST issues
 			minutes = slotDate.minutes();
+			slotEndDate = this.start.clone().time(slotTime + this.slotDuration);
 
-			axisHtml =
-				'<td class="fc-axis fc-time ' + view.widgetContentClass + '" ' + view.axisStyleAttr() + '>' +
-					((!slotNormal || !minutes) ? // if irregular slot duration, or on the hour, then display the time
-						'<span>' + // for matchCellWidths
-							htmlEscape(slotDate.format(this.axisFormat)) +
-						'</span>' :
-						''
-						) +
-				'</td>';
-
+			if (seeSlotDuration) {
+				axisHtml =
+					'<td style="height:' + this.timeSlots[this.timeSlotIndex-1] + 'px;" class="fc-axis fc-time ' + view.widgetContentClass + '" ' + view.axisStyleAttr() + '>' +
+						((displayTime) ? // if irregular slot duration, or on the hour, then display the time
+							'<span>' + // for matchCellWidths
+								htmlEscape(slotDate.format(this.axisFormat)) +
+								' - ' + htmlEscape(slotEndDate.format(this.axisFormat)) +
+							'</span>' :
+							''
+							) +
+					'</td>';
+			}
+			else {
+				axisHtml =
+					'<td style="height:' + this.timeSlots[this.timeSlotIndex-1] + 'px;" class="fc-axis fc-time ' + view.widgetContentClass + '" ' + view.axisStyleAttr() + '>' +
+						((displayTime) ? // if irregular slot duration, or on the hour, then display the time
+							'<span>' + // for matchCellWidths
+								htmlEscape(slotDate.format(this.axisFormat)) +
+							'</span>' :
+							''
+							) +
+					'</td>';
+			}
 			html +=
-				'<tr ' + (!minutes ? '' : 'class="fc-minor"') + '>' +
+				'<tr' + (!minutes ? '' : 'class="fc-minor"') + '>' +
 					(!isRTL ? axisHtml : '') +
-					'<td class="' + view.widgetContentClass + '"/>' +
+					'<td style="height:' + this.timeSlots[this.timeSlotIndex-1] + 'px;" class="' + view.widgetContentClass + ' blas"/>' +
 					(isRTL ? axisHtml : '') +
 				"</tr>";
 
-			slotTime.add(this.slotDuration);
+				slotTime.add(this.slotDuration);
 		}
 
 		return html;
@@ -5742,6 +5787,13 @@ var TimeGrid = Grid.extend({
 		var view = this.view;
 		var slotDuration = view.opt('slotDuration');
 		var snapDuration = view.opt('snapDuration');
+
+		var timeSlots = view.opt('timeSlots');
+		this.timeSlots = timeSlots;
+		this.timeSlotIndex = 0;
+
+		var seeSlotDuration = view.opt('seeSlotDuration');
+		this.seeSlotDuration = seeSlotDuration;
 
 		slotDuration = moment.duration(slotDuration);
 		snapDuration = snapDuration ? moment.duration(snapDuration) : slotDuration;
@@ -6573,6 +6625,7 @@ var View = fc.View = Class.extend({
 	intervalUnit: null, // name of largest unit being displayed, like "month" or "week"
 
 	isSelected: false, // boolean whether a range of time is user-selected or not
+	seeSlotDuration: false, // boolean whether a slot should display start and end time 
 
 	// subclasses can optionally use a scroll container
 	scrollerEl: null, // the element that will most likely scroll when content is too tall
